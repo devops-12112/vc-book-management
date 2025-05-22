@@ -14,6 +14,7 @@ services:
       - ./frontend:/app
       - /app/node_modules
       - frontend_cache:/app/node_modules/.cache
+    restart: always
     stdin_open: true
     tty: true
 
@@ -27,6 +28,7 @@ services:
       - mongodb
     environment:
       - MONGODB_URI=mongodb://mongodb:27017/library
+    restart: always
     volumes:
       - ./backend:/app
       - /app/node_modules
@@ -35,6 +37,7 @@ services:
     image: mongo:latest
     ports:
       - "27017:27017"
+    restart: always
     volumes:
       - mongodb_data:/data/db
 
