@@ -3,6 +3,14 @@ node_modules/
 /.pnp
 .pnp.js
 
+# Cache directories
+.cache/
+*.cache
+frontend/node_modules/.cache/
+backend/node_modules/.cache/
+**/.cache
+**/*.cache
+
 # Testing
 /coverage
 
