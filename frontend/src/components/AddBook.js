@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
@@ -8,12 +8,14 @@ import {
   TextField,
   Button,
   Grid,
-  Box
+  Box,
+  MenuItem
 } from '@mui/material';
 import { toast } from 'react-toastify';
 
 const AddBook = () => {
   const navigate = useNavigate();
+  const [genres, setGenres] = useState([]);
   const [book, setBook] = useState({
     title: '',
     author: '',
@@ -24,6 +26,19 @@ const AddBook = () => {
     quantity: '',
     coverImage: ''
   });
+
+  useEffect(() => {
+    fetchGenres();
+  }, []);
+
+  const fetchGenres = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/books/genres');
+      setGenres(response.data);
+    } catch (error) {
+      toast.error('Error fetching genres');
+    }
+  };
 
   const handleChange = (e) => {
     setBook({ ...book, [e.target.name]: e.target.value });
@@ -93,11 +108,18 @@ const AddBook = () => {
               <TextField
                 required
                 fullWidth
+                select
                 label="Genre"
                 name="genre"
                 value={book.genre}
                 onChange={handleChange}
-              />
+              >
+                {genres.map((genre) => (
+                  <MenuItem key={genre} value={genre}>
+                    {genre}
+                  </MenuItem>
+                ))}
+              </TextField>
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
