@@ -42,7 +42,7 @@ const BookList = () => {
 
   const fetchBooks = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/books', {
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/books`, {
         params: {
           genre: selectedGenre,
           isArchived: viewMode === 'archived'
@@ -56,7 +56,7 @@ const BookList = () => {
 
   const fetchGenres = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/books/genres');
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/books/genres`);
       setGenres(response.data);
     } catch (error) {
       toast.error('Error fetching genres');
@@ -65,7 +65,7 @@ const BookList = () => {
 
   const handleArchive = async (id) => {
     try {
-      await axios.put(`http://localhost:5000/api/books/${id}/archive`);
+      await axios.put(`${process.env.REACT_APP_API_URL}/api/books/${id}/archive`);
       toast.success('Book archived successfully');
       fetchBooks();
     } catch (error) {
@@ -75,7 +75,7 @@ const BookList = () => {
 
   const handleRestore = async (id) => {
     try {
-      await axios.put(`http://localhost:5000/api/books/${id}/restore`);
+      await axios.put(`${process.env.REACT_APP_API_URL}/api/books/${id}/restore`);
       toast.success('Book restored successfully');
       fetchBooks();
     } catch (error) {
@@ -86,7 +86,7 @@ const BookList = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to permanently delete this book?')) {
       try {
-        await axios.delete(`http://localhost:5000/api/books/${id}`);
+        await axios.delete(`${process.env.REACT_APP_API_URL}/api/books/${id}`);
         toast.success('Book deleted permanently');
         fetchBooks();
       } catch (error) {

@@ -1,45 +1,58 @@
 
 services:
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+    build: ./frontend
     ports:
-      - "3000:3000"
+      - "${FRONTEND_PORT:-3000}:3000"
+    environment:
+      - REACT_APP_API_URL=${REACT_APP_API_URL:-http://localhost:5000}
     depends_on:
       - backend
-    environment:
-      - REACT_APP_API_URL=http://localhost:5000
     volumes:
       - ./frontend:/app
       - /app/node_modules
       - frontend_cache:/app/node_modules/.cache
-    restart: always
+    networks:
+      - mern-network
+    restart: unless-stopped
     stdin_open: true
     tty: true
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    build: ./backend
     ports:
-      - "5000:5000"
-    depends_on:
-      - mongodb
+      - "${PORT:-5000}:${PORT:-5000}"
     environment:
-      - MONGODB_URI=mongodb://mongodb:27017/library
-    restart: always
+      - PORT=${PORT:-5000}
+      - MONGODB_URI=mongodb://mongo:27017/library
+      - NODE_ENV=${NODE_ENV:-development}
+    depends_on:
+      - mongo
     volumes:
       - ./backend:/app
       - /app/node_modules
+    networks:
+      - mern-network
+    restart: unless-stopped
 
-  mongodb:
+  mongo:
     image: mongo:latest
     ports:
-      - "27017:27017"
-    restart: always
+      - "${MONGO_PORT:-27017}:27017"
     volumes:
       - mongodb_data:/data/db
+    networks:
+      - mern-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+networks:
+  mern-network:
+    driver: bridge
 
 volumes:
   mongodb_data:

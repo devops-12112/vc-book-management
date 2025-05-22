@@ -33,7 +33,7 @@ const AddBook = () => {
 
   const fetchGenres = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/books/genres');
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/books/genres`);
       setGenres(response.data);
     } catch (error) {
       toast.error('Error fetching genres');
@@ -47,7 +47,7 @@ const AddBook = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:5000/api/books', book);
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/books`, book);
       toast.success('Book added successfully');
       navigate('/');
     } catch (error) {
