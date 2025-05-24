@@ -18,9 +18,19 @@ app.use(morgan('dev'));
 // MongoDB Connection
 const connectDB = async () => {
   try {
-    const mongoURI = process.env.MONGODB_URI || 'mongodb://mongo:27017/library';
+    const mongoURI = process.env.MONGODB_URI;
+    if (!mongoURI) {
+      console.error('FATAL ERROR: MONGODB_URI is not defined.');
+      process.exit(1);
+    }
     console.log('Attempting to connect to MongoDB at:', mongoURI);
     
+    mongoose.connection.on('connected', () => console.log('Mongoose: connected to DB'));
+    mongoose.connection.on('error', (err) => console.error('Mongoose: connection error:', err));
+    mongoose.connection.on('disconnected', () => console.log('Mongoose: disconnected'));
+    mongoose.connection.on('reconnected', () => console.log('Mongoose: reconnected'));
+    mongoose.connection.on('close', () => console.log('Mongoose: connection closed'));
+
     await mongoose.connect(mongoURI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
@@ -28,7 +38,7 @@ const connectDB = async () => {
       socketTimeoutMS: 45000,
     });
     
-    console.log('MongoDB Connected Successfully');
+    // console.log('MongoDB Connected Successfully'); // Covered by 'connected' event
   } catch (err) {
     console.error('MongoDB Connection Error:', err);
     // Don't exit the process, just log the error

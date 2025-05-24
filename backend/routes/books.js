@@ -7,17 +7,30 @@ router.get('/', async (req, res) => {
   try {
     const { genre, isArchived } = req.query;
     const filter = {};
-    
+
     if (genre) {
       filter.genre = genre;
     }
-    
-    // Only show archived books if specifically requested
-    filter.isArchived = isArchived === 'true';
 
+    // Handle isArchived status
+    // If isArchived is explicitly 'true', filter for archived books
+    // Otherwise (isArchived is 'false' or not provided), filter for non-archived books
+    // Non-archived includes isArchived: false, or isArchived does not exist, or isArchived is null
+    if (isArchived === 'true') {
+      filter.isArchived = true;
+    } else {
+      filter.$or = [
+        { isArchived: false },
+        { isArchived: { $exists: false } },
+        { isArchived: null }
+      ];
+    }
+    // console.log('Backend filter applied:', JSON.stringify(filter)); // For debugging
     const books = await Book.find(filter).sort({ createdAt: -1 });
+    // console.log('Books fetched after filter:', books.length);
     res.json(books);
   } catch (error) {
+    console.error('Error fetching books:', error);
     res.status(500).json({ message: error.message });
   }
 });

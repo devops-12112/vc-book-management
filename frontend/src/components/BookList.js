@@ -42,12 +42,13 @@ const BookList = () => {
 
   const fetchBooks = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/books`, {
-        params: {
-          genre: selectedGenre,
-          isArchived: viewMode === 'archived'
-        }
-      });
+      const params = {
+        isArchived: viewMode === 'archived'
+      };
+      if (selectedGenre) {
+        params.genre = selectedGenre;
+      }
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/books`, { params });
       setBooks(response.data);
     } catch (error) {
       toast.error('Error fetching books');

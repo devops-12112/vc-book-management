@@ -1,11 +1,10 @@
-
 services:
   frontend:
     build: ./frontend
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     environment:
-      - REACT_APP_API_URL=${REACT_APP_API_URL:-http://localhost:5000}
+      - REACT_APP_API_URL=${REACT_APP_API_URL:-http://backend:5000}
     depends_on:
       - backend
     volumes:
@@ -37,17 +36,13 @@ services:
 
   mongo:
     image: mongo:latest
+    container_name: mern_mongo_data_container
     ports:
       - "${MONGO_PORT:-27017}:27017"
     volumes:
       - mongodb_data:/data/db
     networks:
       - mern-network
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     restart: unless-stopped
 
 networks:
