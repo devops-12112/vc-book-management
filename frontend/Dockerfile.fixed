@@ -20,16 +20,7 @@ ENV REACT_APP_API_URL=${REACT_APP_API_URL}
 # Expose port 3000
 EXPOSE 3000
 
-# Create an entrypoint script
-COPY <<EOF /entrypoint.sh
-#!/bin/sh
-echo "ENTRYPOINT SCRIPT STARTED" >&2
-echo "ENV VAR REACT_APP_API_URL IS: [$REACT_APP_API_URL]" >&2
-echo "ALL ENV VARS:" >&2
-printenv >&2
-echo "ENTRYPOINT SCRIPT FINISHED - will sleep now" >&2
-sleep 3600 # Sleep for an hour instead of npm start
-EOF
-RUN chmod +x /entrypoint.sh
+COPY docker-entrypoint.sh /
+RUN chmod +x /docker-entrypoint.sh
 
-CMD ["/entrypoint.sh"] 
+CMD ["/docker-entrypoint.sh"]

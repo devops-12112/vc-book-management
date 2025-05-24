@@ -1,100 +1,104 @@
-# Library Management System
+# MERN Library Management System on Kubernetes
 
-A modern MERN stack application for managing a library's book collection. Built with MongoDB, Express.js, React.js, and Node.js, featuring a beautiful Material-UI interface.
-
-## Features
-
-- Add, edit, and delete books
-- View detailed book information
-- Modern and responsive UI
-- Containerized with Docker
-- RESTful API backend
-- MongoDB database
+This project is a library management system built with the MERN stack (MongoDB, Express, React, Node.js) and deployed on Kubernetes.
 
 ## Prerequisites
 
-- Docker and Docker Compose
-- Node.js (for local development)
+- Docker
+- Kind (Kubernetes in Docker)
+- kubectl
+- Node.js and npm (for local development)
 
-## Quick Start with Docker
+## Setting up the Kind Cluster
 
-1. Clone the repository:
+1. Create a Kind cluster using the provided configuration:
+
 ```bash
-git clone <repository-url>
-cd library-management
+kind create cluster --name mern-library-cluster --config kind-cluster-config.yaml
 ```
 
-2. Start the application using Docker Compose:
+2. Install the NGINX Ingress Controller:
+
 ```bash
-docker-compose up --build
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
 ```
 
-The application will be available at:
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:5000
-- MongoDB: mongodb://localhost:27017
+3. Wait for the ingress controller to be ready:
 
-## Development Setup
-
-### Backend
-
-1. Navigate to the backend directory:
 ```bash
-cd backend
+kubectl wait --namespace ingress-nginx \
+  --for=condition=ready pod \
+  --selector=app.kubernetes.io/component=controller \
+  --timeout=90s
 ```
 
-2. Install dependencies:
+## Deploying the Application
+
+1. Add the following entry to your `/etc/hosts` file:
+
+```
+127.0.0.1 mern-library.local
+```
+
+2. Run the build and deploy script:
+
 ```bash
-npm install
+./build-and-deploy.sh
 ```
 
-3. Start the development server:
+This script will:
+- Build the frontend and backend Docker images
+- Load the images into the Kind cluster
+- Apply all Kubernetes manifests
+- Wait for all pods to be ready
+
+## Accessing the Application
+
+Once deployed, you can access the application at:
+
+- Frontend: http://mern-library.local
+- Backend API: http://mern-library.local/api
+
+## Troubleshooting
+
+If you encounter issues:
+
+1. Check pod status:
 ```bash
-npm run dev
+kubectl get pods -n mern-library-ns
 ```
 
-### Frontend
-
-1. Navigate to the frontend directory:
+2. Check pod logs:
 ```bash
-cd frontend
+kubectl logs -n mern-library-ns <pod-name>
 ```
 
-2. Install dependencies:
+3. Check service status:
 ```bash
-npm install
+kubectl get services -n mern-library-ns
 ```
 
-3. Start the development server:
+4. Check ingress status:
 ```bash
-npm start
+kubectl get ingress -n mern-library-ns
 ```
 
-## API Endpoints
+## Architecture
 
-- GET /api/books - Get all books
-- GET /api/books/:id - Get a specific book
-- POST /api/books - Create a new book
-- PUT /api/books/:id - Update a book
-- DELETE /api/books/:id - Delete a book
+The application consists of three main components:
 
-## Environment Variables
+1. **Frontend**: React application
+2. **Backend**: Node.js/Express API
+3. **Database**: MongoDB
 
-Create a `.env` file in the backend directory:
+These components are deployed as separate services in Kubernetes, with an Ingress controller routing traffic to the appropriate service.
 
-```env
-MONGODB_URI=mongodb://mongodb:27017/library
-PORT=5000
-```
+## Kubernetes Resources
 
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a new Pull Request
-
-## License
-
-This project is licensed under the MIT License. 
+- **Namespace**: `mern-library-ns`
+- **Deployments**: Frontend, Backend, MongoDB
+- **Services**: Frontend, Backend, MongoDB
+- **ConfigMaps**: Frontend, Backend
+- **Secrets**: Backend (MongoDB URI)
+- **PersistentVolumeClaim**: MongoDB
+- **Ingress**: Routes traffic to Frontend and Backend services
