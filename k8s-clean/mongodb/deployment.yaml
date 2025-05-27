@@ -17,9 +17,13 @@ spec:
         image: mongo:latest
         ports:
         - containerPort: 27017
+        env:
+        - name: MONGO_INITDB_DATABASE
+          value: "library"
         volumeMounts:
         - name: mongo-storage
           mountPath: /data/db
       volumes:
       - name: mongo-storage
-        emptyDir: {}
+        persistentVolumeClaim:
+          claimName: mongo-pvc
