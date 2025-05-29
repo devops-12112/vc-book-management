@@ -2,34 +2,11 @@ FROM node:20-slim
 
 WORKDIR /app
 
-# Install dependencies first
 COPY package*.json ./
 RUN npm install
 
-# Copy the rest of the application
 COPY . .
 
-# Create cache directory and set permissions
-RUN mkdir -p /app/node_modules/.cache && \
-    chmod -R 777 /app/node_modules/.cache
-
-# The API URL will be provided through K8s ConfigMap
-ARG REACT_APP_API_URL
-ENV REACT_APP_API_URL=${REACT_APP_API_URL}
-
-# Expose port 3000
 EXPOSE 3000
 
-# Create an entrypoint script
-COPY <<EOF /entrypoint.sh
-#!/bin/sh
-echo "ENTRYPOINT SCRIPT STARTED" >&2
-echo "ENV VAR REACT_APP_API_URL IS: [$REACT_APP_API_URL]" >&2
-echo "ALL ENV VARS:" >&2
-printenv >&2
-echo "ENTRYPOINT SCRIPT FINISHED - will sleep now" >&2
-sleep 3600 # Sleep for an hour instead of npm start
-EOF
-RUN chmod +x /entrypoint.sh
-
-CMD ["/entrypoint.sh"] 
+CMD ["npm", "start"]

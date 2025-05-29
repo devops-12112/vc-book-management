@@ -34,7 +34,7 @@ const EditBook = () => {
 
   const fetchBook = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/books/${id}`);
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/books/${id}`);
       setBook(response.data);
       setLoading(false);
     } catch (error) {
@@ -50,7 +50,7 @@ const EditBook = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`${process.env.REACT_APP_API_URL}/api/books/${id}`, book);
+      await axios.put(`${process.env.REACT_APP_API_URL}/books/${id}`, book);
       toast.success('Book updated successfully');
       navigate('/');
     } catch (error) {

@@ -1,0 +1,22 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: access-resources
+rules:
+  - apiGroups: ["", "apps", "batch"]
+    resources: ["pods", "deployments", "statefulsets", "replicasets", "jobs", "cronjobs", "events", "daemonsets", "replicationcontrollers", "namespaces"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: bind-access-resources
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: access-resources
+  apiGroup: rbac.authorization.k8s.io
+

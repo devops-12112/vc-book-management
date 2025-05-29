@@ -33,7 +33,7 @@ const BookDetails = () => {
 
   const fetchBook = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/books/${id}`);
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/books/${id}`);
       setBook(response.data);
       setLoading(false);
     } catch (error) {
