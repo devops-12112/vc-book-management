@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+  labels:
+    app: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: lalbudha47/mern-backend:v1
+        ports:
+        - containerPort: 5000
+        envFrom:
+        - configMapRef:
+            name: backend-config
+        - secretRef:
+            name: backend-secret
+        env:
+        - name: MONGODB_URI
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: MONGODB_URI
+        - name: FRONTEND_URL
+          value: "http://mern.example.com:8080"
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            # Create a custom server.js with fixed CORS
+            cat > /app/server-fixed.js << 'EOF'
+            const express = require('express');
+            const mongoose = require('mongoose');
+            const cors = require('cors');
+            const morgan = require('morgan');
+
+            const app = express();
+
+            // Middleware
+            app.use(cors());  // Allow all origins
+            app.use(express.json());
+            app.use(morgan('dev'));
+
+            // MongoDB Connection
+            const connectDB = async () => {
+              try {
+                const mongoURI = process.env.MONGODB_URI;
+                if (!mongoURI) {
+                  console.error('FATAL ERROR: MONGODB_URI is not defined.');
+                  process.exit(1);
+                }
+                console.log('Attempting to connect to MongoDB at:', mongoURI);
+                
+                mongoose.connection.on('connected', () => console.log('Mongoose: connected to DB'));
+                mongoose.connection.on('error', (err) => console.error('Mongoose: connection error:', err));
+                mongoose.connection.on('disconnected', () => console.log('Mongoose: disconnected'));
+                mongoose.connection.on('reconnected', () => console.log('Mongoose: reconnected'));
+                mongoose.connection.on('close', () => console.log('Mongoose: connection closed'));
+
+                await mongoose.connect(mongoURI, {
+                  useNewUrlParser: true,
+                  useUnifiedTopology: true,
+                  serverSelectionTimeoutMS: 30000,
+                  socketTimeoutMS: 45000,
+                });
+              } catch (err) {
+                console.error('MongoDB Connection Error:', err);
+                console.error('Will retry connection...');
+              }
+            };
+
+            // Connect to MongoDB with retry
+            const connectWithRetry = () => {
+              connectDB().catch(err => {
+                console.log('MongoDB connection unsuccessful, retry after 5 seconds...');
+                setTimeout(connectWithRetry, 5000);
+              });
+            };
+
+            connectWithRetry();
+
+            // Health check endpoint
+            app.get('/health', (req, res) => {
+              res.status(200).json({ status: 'ok' });
+            });
+
+            // Routes
+            app.use('/api/books', require('./routes/books'));
+
+            // Error handling middleware
+            app.use((err, req, res, next) => {
+              console.error(err.stack);
+              res.status(500).json({ message: 'Something broke!', error: err.message });
+            });
+
+            const PORT = process.env.PORT || 5000;
+            app.listen(PORT, '0.0.0.0', () => {
+              console.log(`Server is running on port ${PORT}`);
+            });
+            EOF
+
+            # Replace the original server.js with our fixed version
+            cp /app/server-fixed.js /app/server.js
+
+            # Start the server
+            npm start
