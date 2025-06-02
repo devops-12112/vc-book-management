@@ -1,31 +1,61 @@
-version: '3'
-
 services:
   frontend:
-    image: lalbudha47/mern-frontend:v2.0.0
+    container_name: mern_frontend_container
+    build: ./frontend
     ports:
-      - "3000:3000"
-    restart: always
+      - ${FRONTEND_PORT}:${FRONTEND_PORT}
+    environment:
+      - REACT_APP_API_URL=${REACT_APP_API_URL}
     depends_on:
       - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - mern-network
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
 
   backend:
-    image: lalbudha47/mern-backend:v2.0.0
+    container_name: mern_backend_container
+    build: ./backend
     ports:
-      - "5000:5000"
-    restart: always
+      - ${PORT}:${PORT}
     environment:
-      - MONGODB_URI=mongodb://mongodb:27017/mern-library
+      - PORT=${PORT}
+      - MONGODB_URI=${MONGODB_URI}
+      - NODE_ENV=${NODE_ENV}
     depends_on:
-      - mongodb
+      - mongo
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - mern-network
+    restart: unless-stopped
 
-  mongodb:
+  mongo:
     image: mongo:latest
+    container_name: mern_mongo_data_container
     ports:
-      - "27017:27017"
+      - ${MONGO_PORT}:${MONGO_PORT}
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+      - MONGO_INITDB_DATABASE=${MONGO_INITDB_DATABASE}
     volumes:
       - mongodb_data:/data/db
-    restart: always
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js
+    command: mongod --auth
+    networks:
+      - mern-network
+    restart: unless-stopped
+
+networks:
+  mern-network:
+    driver: bridge
 
 volumes:
   mongodb_data:
+    driver: local
