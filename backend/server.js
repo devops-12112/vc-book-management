@@ -12,6 +12,7 @@ app.use(cors({
       'http://mern-library.local', // For Kind Ingress
       'http://dev.lanskill.com',   // For future VPS deployment
       'http://localhost:3000',     // For local `npm start` frontend dev
+      'http://34.170.175.194:3000', // GCP frontend
       process.env.FRONTEND_URL    // For more dynamic configuration
     ];
     // Allow requests with no origin (like mobile apps or curl requests)
