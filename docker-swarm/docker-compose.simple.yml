@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongo:
+    image: mongo:7.0
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongo_user
+      MONGO_INITDB_ROOT_PASSWORD: mongo_password
+      MONGO_INITDB_DATABASE: library
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - mern_network
+    ports:
+      - "27017:27017"
+
+  # Backend API
+  backend:
+    image: lalbudha47/mern-backend:v1
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      MONGODB_URI: mongodb://mongo_user:mongo_password@mongo:27017/library?authSource=admin
+    networks:
+      - mern_network
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongo
+
+  # Frontend React App
+  frontend:
+    image: lalbudha47/mern-frontend:v1
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+    environment:
+      REACT_APP_API_URL: http://localhost:5000/api
+    networks:
+      - mern_network
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+networks:
+  mern_network:
+    driver: overlay
+    attachable: true
+
+volumes:
+  mongo_data:
+    driver: local
